@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Sistema de Acompanhamento Escolar da ECI PMO. Acesse notas, seminários, provas e ocorrências do seu filho.">
+    <!-- Security Headers via Meta -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://*.supabase.co https://api.z-api.io;
+        img-src 'self' data:;
+        font-src 'self';
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>ECI PMO – Sistema de Acompanhamento Escolar</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <div class="login-box">
+            <div class="login-card fade-in">
+                <div class="login-logo">
+                    <img src="logo.png" alt="ECI Padre Manoel Otaviano">
+                    <h1>ECI Padre Manoel Otaviano</h1>
+                    <p>Sistema de Acompanhamento Escolar</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="login-tabs">
+                    <button class="login-tab active" id="tab-responsavel"
+                        onclick="switchTab('responsavel')">Responsável</button>
+                    <button class="login-tab" id="tab-admin" onclick="switchTab('admin')">Administração</button>
+                </div>
+
+                <!-- Error -->
+                <div class="login-error" id="login-error"></div>
+
+                <!-- Parent Login -->
+                <form id="form-responsavel" onsubmit="handleParentLogin(event)">
+                    <div class="form-group">
+                        <label for="matricula">Matrícula do Aluno</label>
+                        <input type="text" id="matricula" class="form-control" placeholder="Ex: 2026001" required
+                            autocomplete="off" maxlength="10" pattern="\d{4,10}" title="Apenas números (4-10 dígitos)">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-parent-login"
+                        style="padding:14px;font-size:1rem;">
+                        🔑 Acessar Painel
+                    </button>
+                </form>
+
+                <!-- Admin Login -->
+                <form id="form-admin" class="hidden" onsubmit="handleAdminLogin(event)">
+                    <div id="admin-login-fields">
+                        <div class="form-group">
+                            <label for="admin-email">E-mail Institucional</label>
+                            <input type="email" id="admin-email" class="form-control"
+                                placeholder="usuario@professor.pb.gov.br" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-password">Senha</label>
+                            <input type="password" id="admin-password" class="form-control" placeholder="Sua senha"
+                                required minlength="8">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" id="btn-admin-login"
+                            style="padding:14px;font-size:1rem;">
+                            🔐 Entrar como Admin
+                        </button>
+                        <p class="mt-2 text-center" style="font-size:0.85rem;">
+                            Não tem uma conta? <a href="#"
+                                onclick="toggleAdminRegister(true); return false;">Registrar-se</a>
+                        </p>
+                    </div>
+                </form>
+
+                <!-- Admin Register -->
+                <form id="form-admin-register" class="hidden" onsubmit="handleAdminRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-email">E-mail Institucional</label>
+                        <input type="email" id="reg-email" class="form-control"
+                            placeholder="usuario@professor.pb.gov.br" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-pass">Senha</label>
+                            <input type="password" id="reg-pass" class="form-control" placeholder="Mín. 8 caracteres"
+                                required minlength="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-pass-confirm">Confirmar Senha</label>
+                            <input type="password" id="reg-pass-confirm" class="form-control" placeholder="Confirmar"
+                                required minlength="8">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-token">Token de Registro</label>
+                        <input type="text" id="reg-token" class="form-control" placeholder="Insira o token de registro"
+                            required autocomplete="off">
+                    </div>
+                    <div id="password-strength" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block" id="btn-register"
+                        style="padding:14px;font-size:1rem;background-color: #22c55e; border:none; color:white; border-radius:8px; cursor:pointer; width:100%;">
+                        📝 Criar Registro
+                    </button>
+                    <p class="mt-2 text-center" style="font-size:0.85rem;">
+                        Já tem uma conta? <a href="#" onclick="toggleAdminRegister(false); return false;">Voltar ao
+                            Login</a>
+                    </p>
+                </form>
+
+                <div id="token-display" class="hidden mt-3 p-3 text-center"
+                    style="background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px dashed #22c55e;">
+                    <p style="font-size: 0.85rem; color: #166534;">Registro realizado com sucesso!</p>
+                    <p style="font-size: 0.75rem; color: #166534;">Você já pode realizar o login com suas credenciais.
+                    </p>
+                    <button onclick="toggleAdminRegister(false)" class="btn btn-sm mt-2"
+                        style="background:#22c55e; color:white; border:none; padding:5px 10px; border-radius:4px;">Ir
+                        para Login</button>
+                </div>
+
+                <div class="mt-3 text-center" style="font-size:0.78rem;color:var(--text-muted);">
+                    <p>© 2026 ECI Padre Manoel Otaviano - Todos os direitos reservados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/security.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        /* ========== Rate Limiters ========== */
+        const parentLimiter = new RateLimiter('login_parent', 5, 15 * 60 * 1000);
+        const adminLimiter = new RateLimiter('login_admin', 5, 15 * 60 * 1000);
+        const registerLimiter = new RateLimiter('register', 3, 30 * 60 * 1000);
+
+        function switchTab(tab) {
+            document.getElementById('tab-responsavel').classList.toggle('active', tab === 'responsavel');
+            document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
+            document.getElementById('form-responsavel').classList.toggle('hidden', tab !== 'responsavel');
+            document.getElementById('form-admin').classList.toggle('hidden', tab !== 'admin');
+            document.getElementById('login-error').classList.remove('show');
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function formatLockoutMessage(seconds) {
+            if (seconds >= 60) {
+                const mins = Math.ceil(seconds / 60);
+                return `Muitas tentativas. Tente novamente em ${mins} minuto(s).`;
+            }
+            return `Muitas tentativas. Tente novamente em ${seconds} segundo(s).`;
+        }
+
+        async function handleParentLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-parent-login');
+
+            // Rate limiting
+            const check = parentLimiter.check();
+            if (!check.allowed) {
+                showError(formatLockoutMessage(check.lockoutSeconds));
+                return;
+            }
+
+            // Validar input
+            const matricula = document.getElementById('matricula').value.trim();
+            const validation = SecurityUtils.validateMatricula(matricula);
+            if (!validation.valid) {
+                showError(validation.message);
+                return;
+            }
+
+            btn.disabled = true; btn.textContent = '⏳ Verificando...';
+            const session = await SessionManager.login(validation.value);
+            if (session) {
+                parentLimiter.reset();
+                window.location.href = '/dashboard/';
+            } else {
+                parentLimiter.recordFailure();
+                const remaining = parentLimiter.check();
+                const msg = remaining.remainingAttempts > 0
+                    ? `Matrícula não encontrada. (${remaining.remainingAttempts} tentativa(s) restante(s))`
+                    : formatLockoutMessage(remaining.lockoutSeconds);
+                showError(msg);
+                btn.disabled = false; btn.textContent = '🔑 Acessar Painel';
+            }
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-admin-login');
+
+            // Rate limiting
+            const check = adminLimiter.check();
+            if (!check.allowed) {
+                showError(formatLockoutMessage(check.lockoutSeconds));
+                return;
+            }
+
+            const email = document.getElementById('admin-email').value.trim();
+            const password = document.getElementById('admin-password').value;
+
+            // Validar email
+            const emailVal = SecurityUtils.validateEmail(email);
+            if (!emailVal.valid) {
+                showError(emailVal.message);
+                return;
+            }
+
+            btn.disabled = true; btn.textContent = '⏳ Verificando...';
+            const session = await SessionManager.adminLogin(emailVal.value, password);
+            if (session) {
+                adminLimiter.reset();
+                window.location.href = '/admin/';
+            } else {
+                adminLimiter.recordFailure();
+                const remaining = adminLimiter.check();
+                const msg = remaining.remainingAttempts > 0
+                    ? `E-mail ou senha inválidos. (${remaining.remainingAttempts} tentativa(s) restante(s))`
+                    : formatLockoutMessage(remaining.lockoutSeconds);
+                showError(msg);
+                btn.disabled = false; btn.textContent = '🔐 Entrar como Admin';
+            }
+        }
+
+        function toggleAdminRegister(show) {
+            document.getElementById('form-admin').classList.toggle('hidden', show);
+            document.getElementById('form-admin-register').classList.toggle('hidden', !show);
+            document.getElementById('token-display').classList.add('hidden');
+            document.getElementById('login-error').classList.remove('show');
+        }
+
+        /* Password strength indicator */
+        document.getElementById('reg-pass')?.addEventListener('input', function () {
+            const el = document.getElementById('password-strength');
+            const pwd = this.value;
+            if (!pwd) { el.textContent = ''; return; }
+
+            const checks = [
+                pwd.length >= 8,
+                /[A-Z]/.test(pwd),
+                /[a-z]/.test(pwd),
+                /\d/.test(pwd)
+            ];
+            const passed = checks.filter(Boolean).length;
+            const labels = ['🔴 Muito fraca', '🟠 Fraca', '🟡 Razoável', '🟢 Boa', '🟢 Forte'];
+            el.textContent = `Força: ${labels[passed]}`;
+            el.style.color = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'][passed];
+        });
+
+        async function handleAdminRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-register');
+
+            // Rate limiting
+            const check = registerLimiter.check();
+            if (!check.allowed) {
+                showError(formatLockoutMessage(check.lockoutSeconds));
+                return;
+            }
+
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const confirm = document.getElementById('reg-pass-confirm').value;
+            const token = document.getElementById('reg-token').value.trim();
+
+            // Validar email
+            const emailVal = SecurityUtils.validateEmail(email);
+            if (!emailVal.valid) {
+                showError(emailVal.message);
+                return;
+            }
+
+            // Validar senha
+            const passVal = SecurityUtils.validatePassword(pass);
+            if (!passVal.valid) {
+                showError(passVal.message);
+                return;
+            }
+
+            if (pass !== confirm) {
+                showError('As senhas não coincidem.');
+                return;
+            }
+
+            // Validar token (agora via banco de dados, não mais hardcoded)
+            const tokenValid = await SessionManager.validateRegistrationToken(token);
+            if (!tokenValid) {
+                registerLimiter.recordFailure();
+                showError('Token de registro inválido.');
+                return;
+            }
+
+            btn.disabled = true; btn.textContent = '⏳ Registrando...';
+
+            try {
+                await SessionManager.adminRegister(emailVal.value, pass);
+                document.getElementById('form-admin-register').classList.add('hidden');
+                document.getElementById('token-display').classList.remove('hidden');
+            } catch (err) {
+                registerLimiter.recordFailure();
+                showError(err.message);
+                btn.disabled = false; btn.textContent = '📝 Criar Registro';
+            }
+        }
+
+        // Redirect if already logged in (with secure session validation)
+        if (SessionManager.getSession()) window.location.href = '/dashboard/';
+        if (SessionManager.getAdminSession()) window.location.href = '/admin/';
+    </script>
+</body>
+
+</html>
