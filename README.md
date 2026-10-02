@@ -1,8 +1,13 @@
+<div align="center">
+
 # Sistema de Acompanhamento Escolar
 
 <p align="center">
-  <strong>Um sistema moderno para acompanhamento acadêmico, comunicação escolar e gestão de alunos.</strong>
+  <strong>Uma plataforma moderna para acompanhamento acadêmico, comunicação escolar e gestão de alunos.</strong>
 </p>
+
+</div>
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/HTML5-0A0A0A?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
