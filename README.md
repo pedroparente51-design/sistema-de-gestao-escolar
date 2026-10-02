@@ -1,4 +1,4 @@
-# ECI PMO — Sistema de Acompanhamento Escolar
+# Sistema de Acompanhamento Escolar
 
 <p align="center">
   <strong>Um sistema moderno para acompanhamento acadêmico, comunicação escolar e gestão de alunos.</strong>
